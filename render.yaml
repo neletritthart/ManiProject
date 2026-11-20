@@ -3,5 +3,5 @@ services:
     name: ciup-fast-track
     env: static
     staticPublishPath: .
-    buildCommand: ""
+    buildCommand: "echo no build needed"
     pullRequestPreviewsEnabled: false
