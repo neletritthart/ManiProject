@@ -144,6 +144,35 @@ const CONTACTS = {
   },
 };
 
+const POPULAR_KEYWORDS = ['heating','hot water','wifi','rent','key','package','noise','cleaning','guests','repair'];
+
+const QUICK_ANSWERS = [
+  { id:'qa-radiator',  keywords:['heat','radiator','cold','warm','heating'],
+    question:'My radiator is cold. What should I check first?',
+    answer:'Check the valve at the bottom is fully open. If still cold, report it to the maintenance team.',
+    key:'maintenance' },
+  { id:'qa-hot-water', keywords:['hot water','shower','no hot water','cold water'],
+    question:'There is no hot water in the shower',
+    answer:'Wait 5 minutes and try again. If still cold, contact the maintenance team.',
+    key:'maintenance' },
+  { id:'qa-wifi',      keywords:['wifi','internet','connection','password','network','connect'],
+    question:"I can't connect to the wifi",
+    answer:"Check you're using the correct network name. If the problem persists, contact IT support.",
+    key:'it' },
+  { id:'qa-locked',    keywords:['locked','locked out','key','badge','access','door'],
+    question:'I am locked out of my room',
+    answer:'Go to reception immediately. Outside opening hours, contact CIUP security.',
+    key:'reception' },
+  { id:'qa-rent',      keywords:['rent','payment','invoice','bank','transfer','charge'],
+    question:"I haven't received my rent invoice",
+    answer:'Contact the house administration by email or visit the office during opening hours.',
+    key:'admin' },
+  { id:'qa-noise',     keywords:['noise','loud','neighbour','music','party','disturb'],
+    question:'My neighbours are making too much noise',
+    answer:'First speak to them directly if safe to do so. If the problem continues, contact the house director.',
+    key:'director' },
+];
+
 // Maps search terms to a contact key
 const SEARCH_INDEX = [
   { terms: ["heat", "hot water", "water", "plumb", "boiler", "radiator", "pipe", "leak", "electric", "socket", "broken", "repair", "shower", "tap", "faucet"], key: "maintenance" },
