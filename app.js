@@ -339,12 +339,6 @@ ${navbar('app')}
       </div>`).join('')}
   </div>
 
-  <a class="map-promo" href="cite-u-3d/index.html">
-    <span><strong>Looking for a place, not a person?</strong><br>
-    Explore the 3D campus map: houses, restaurants, sports, services and transport.</span>
-    <span class="map-promo-cta">Open the map ${IC.arrowRight}</span>
-  </a>
-
   <div class="emergency-banner">
     ${IC.warn}
     <span>
@@ -352,6 +346,20 @@ ${navbar('app')}
       then contact CIUP security at <strong>+33 1 44 16 65 00</strong> (24/7).
     </span>
   </div>
+
+  <section class="map-section">
+    <div class="map-head">
+      <div>
+        <h2 class="map-title">Looking for a place, not a person?</h2>
+        <p class="map-sub">Explore the 3D campus map: houses, restaurants, sports, services and transport.</p>
+      </div>
+      <a class="map-fullscreen" href="cite-u-3d/index.html">Open full screen ${IC.arrowRight}</a>
+    </div>
+    <div class="map-frame" id="map-frame" onpointerleave="if(event.pointerType==='mouse')lockMap()">
+      <iframe src="cite-u-3d/index.html?embed" title="3D campus map" loading="lazy"></iframe>
+      <button class="map-unlock" type="button" onclick="unlockMap()"><span>Click to explore the map</span></button>
+    </div>
+  </section>
 </div>`;
 }
 
@@ -585,6 +593,14 @@ function copyEmail(email, idx) {
     finish(true);
   }
 }
+
+// ── Embedded campus map ────────────────────────────────────────
+// A cover sits over the map until clicked, so scrolling the page doesn't zoom or rotate it by accident.
+function unlockMap() { document.getElementById('map-frame')?.classList.add('active'); }
+function lockMap()   { document.getElementById('map-frame')?.classList.remove('active'); }
+
+// Touch screens have no "mouse leaves": lock again on a tap anywhere outside the map.
+document.addEventListener('pointerdown', e => { if (!e.target.closest('#map-frame')) lockMap(); });
 
 // ── Search autocomplete ────────────────────────────────────────
 function updateDropdown() {

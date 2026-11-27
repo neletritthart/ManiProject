@@ -1,22 +1,87 @@
+const $ = s => document.querySelector(s);
+
+// ---------- languages ----------
+const STR = {
+  en: {
+    title: 'Cité U in 3D', panel: 'Campus guide', eyebrow: 'Paris 14th · Boulevard Jourdan', in3d: 'in 3D',
+    sub: 'Preview generated from OpenStreetMap. Rotate the model, click a house or a place to find it.',
+    search: 'Search for a house, a service…', searchLabel: 'Search', overview: 'Overview', language: 'Language',
+    hide: 'Hide panel', show: 'Show guide', data: 'Data ©', osm: 'OpenStreetMap contributors', heights: 'some heights are estimated',
+    loading: 'Building the model…', loadError: 'Could not load the model',
+    places: 'Places and services', houses: 'Houses and buildings',
+    empty: 'No results. Try “café”, “Brésil” or “RER”.',
+    buildings: 'buildings', height: h => 'about ' + h + ' m tall', estimated: 'estimated',
+    osmLink: 'View on OpenStreetMap', unnamed: 'Building with no name in OSM'
+  },
+  fr: {
+    title: 'Cité U en 3D', panel: 'Guide du campus', eyebrow: 'Paris 14e · Boulevard Jourdan', in3d: 'en 3D',
+    sub: 'Aperçu généré depuis OpenStreetMap. Fais tourner la maquette, clique une maison ou un lieu pour le retrouver.',
+    search: 'Chercher une maison, un service…', searchLabel: 'Chercher', overview: 'Vue d’ensemble', language: 'Langue',
+    hide: 'Masquer le panneau', show: 'Afficher le guide', data: 'Données ©', osm: 'contributeurs OpenStreetMap', heights: 'hauteurs parfois estimées',
+    loading: 'Construction de la maquette…', loadError: 'Impossible de charger la maquette',
+    places: 'Lieux et services', houses: 'Maisons et bâtiments',
+    empty: 'Aucun résultat. Essaie « café », « Brésil » ou « RER ».',
+    buildings: 'bâtiments', height: h => 'environ ' + h + ' m de haut', estimated: 'estimé',
+    osmLink: 'Voir la fiche OpenStreetMap', unnamed: 'Bâtiment sans nom dans OSM'
+  }
+};
+// English by default (like the rest of the site); the visitor's choice is remembered.
+let lang = 'en';
+try { if (localStorage.getItem('map-lang') === 'fr') lang = 'fr'; } catch (e) { /* storage blocked */ }
+const t = k => STR[lang][k];
+let onLang = () => {}; // set once the map is built
+
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.title = t('title');
+  for (const el of document.querySelectorAll('[data-i18n]')) el.textContent = t(el.dataset.i18n);
+  for (const el of document.querySelectorAll('[data-i18n-label]')) el.setAttribute('aria-label', t(el.dataset.i18nLabel));
+  for (const el of document.querySelectorAll('[data-i18n-placeholder]')) el.placeholder = t(el.dataset.i18nPlaceholder);
+  for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', b.dataset.lang === lang);
+  onLang();
+}
+for (const b of document.querySelectorAll('[data-lang]')) b.onclick = () => {
+  lang = b.dataset.lang;
+  try { localStorage.setItem('map-lang', lang); } catch (e) { /* storage blocked */ }
+  applyLang();
+};
+// Keep the embedded map and a full-screen tab in the same language
+window.addEventListener('storage', e => { if (e.key === 'map-lang' && (e.newValue === 'en' || e.newValue === 'fr')) { lang = e.newValue; applyLang(); } });
+
+// ---------- collapsible panel ----------
+function setPanel(open) {
+  document.body.classList.toggle('panel-closed', !open);
+  $('#show-panel').hidden = open;
+  $(open ? '#hide-panel' : '#show-panel').focus({ preventScroll: true });
+}
+$('#hide-panel').onclick = () => setPanel(false);
+$('#show-panel').onclick = () => setPanel(true);
+
+applyLang();
+
 fetch('data.json').then(r => r.json()).then(function (D) {
-  const $ = s => document.querySelector(s);
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
   // ---------- categories ----------
   const CATS = {
-    food:    { label: 'Restauration', v: '--c-food' },
-    sport:   { label: 'Sport',        v: '--c-sport' },
-    culture: { label: 'Culture',      v: '--c-culture' },
-    service: { label: 'Services',     v: '--c-service' },
-    transit: { label: 'Transports',   v: '--c-transit' }
+    food:    { en: 'Food',      fr: 'Restauration', v: '--c-food' },
+    sport:   { en: 'Sport',     fr: 'Sport',        v: '--c-sport' },
+    culture: { en: 'Culture',   fr: 'Culture',      v: '--c-culture' },
+    service: { en: 'Services',  fr: 'Services',     v: '--c-service' },
+    transit: { en: 'Transport', fr: 'Transports',   v: '--c-transit' }
   };
+  const kd = (cat, en, fr) => ({ cat, en, fr });
   const KIND = {
-    restaurant: ['food', 'Restaurant'], cafe: ['food', 'Café'], convenience: ['food', 'Épicerie'],
-    sports_centre: ['sport', 'Centre sportif'], fitness_centre: ['sport', 'Salle de fitness'], fitness_station: ['sport', 'Agrès sportifs'], field: ['sport', 'Terrain'], association: ['sport', 'Association'],
-    theatre: ['culture', 'Théâtre'], library: ['culture', 'Bibliothèque'], gallery: ['culture', 'Galerie'], public_bookcase: ['culture', 'Boîte à livres'], artwork: ['culture', 'Œuvre d’art'],
-    bank: ['service', 'Banque'], social_facility: ['service', 'Action sociale'], bicycle: ['service', 'Atelier vélo'], photo_booth: ['service', 'Photomaton'],
-    station: ['transit', 'Station']
+    restaurant: kd('food', 'Restaurant', 'Restaurant'), cafe: kd('food', 'Café', 'Café'), convenience: kd('food', 'Convenience store', 'Épicerie'),
+    sports_centre: kd('sport', 'Sports centre', 'Centre sportif'), fitness_centre: kd('sport', 'Gym', 'Salle de fitness'), fitness_station: kd('sport', 'Outdoor gym equipment', 'Agrès sportifs'), field: kd('sport', 'Sports field', 'Terrain'), association: kd('sport', 'Association', 'Association'),
+    theatre: kd('culture', 'Theatre', 'Théâtre'), library: kd('culture', 'Library', 'Bibliothèque'), gallery: kd('culture', 'Gallery', 'Galerie'), public_bookcase: kd('culture', 'Book exchange box', 'Boîte à livres'), artwork: kd('culture', 'Artwork', 'Œuvre d’art'),
+    bank: kd('service', 'Bank', 'Banque'), social_facility: kd('service', 'Social services', 'Action sociale'), bicycle: kd('service', 'Bike workshop', 'Atelier vélo'), photo_booth: kd('service', 'Photo booth', 'Photomaton'),
+    station: kd('transit', 'Station', 'Station')
   };
+  // Places without a name in OSM are labelled by their kind, in the current language
+  const poiName = p => p.auto ? KIND[p.auto][lang] : p.name;
+  const poiKind = p => p.kinds.map((k, i) => i ? KIND[k][lang].toLowerCase() : KIND[k][lang]).join(', ');
+  const itemName = it => it.type === 'poi' ? poiName(it) : it.name;
 
   // ---------- data prep ----------
   const pip = (x, z, poly) => { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, zi] = poly[i], [xj, zj] = poly[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
@@ -33,23 +98,23 @@ fetch('data.json').then(r => r.json()).then(function (D) {
   for (const p of D.pois) {
     const k = KIND[p.k]; if (!k) continue;
     if (!p.n && p.k === 'artwork') continue;
-    let name = p.n || k[1];
+    let name = p.n || k.fr, auto = p.n ? null : p.k;
     if (p.k === 'station') {
       const line = p.sub === 'tram' ? 'T3a' : (name === 'Cité Universitaire' ? 'RER B' : 'T3a');
-      name = line + ' · ' + name;
+      name = line + ' · ' + name; auto = null;
       const key = name; if (seen[key]) continue; seen[key] = 1;
     }
     // Same place listed twice in OSM (e.g. "Comptoir Coréen" + "Comptoir Coréen Cité", or 3 nodes of fitness gear): merge
     const key = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
     const dup = pois.find(q => Math.hypot(q.x - p.p[0], q.z - p.p[1]) < 150 && (key(q.name) === key(name) || key(q.name).startsWith(key(name) + ' ') || key(name).startsWith(key(q.name) + ' ')));
     if (dup) {
-      if (name.length < dup.name.length) dup.name = name;
-      if (!dup.kind.includes(k[1])) dup.kind += ', ' + k[1].toLowerCase();
+      if (name.length < dup.name.length) { dup.name = name; dup.auto = auto; }
+      if (!dup.kinds.some(x => KIND[x].fr === k.fr)) dup.kinds.push(p.k);
       continue;
     }
     let y = 3;
     for (const b of campusB) if (pip(p.p[0], p.p[1], b.p)) { y = b.H + 2; break; }
-    pois.push({ name, kind: k[1], cat: k[0], x: p.p[0], z: p.p[1], y });
+    pois.push({ name, auto, kinds: [p.k], cat: k.cat, x: p.p[0], z: p.p[1], y });
   }
 
   // Houses grouped by name (aliases: same foundation under its full and short name)
@@ -246,7 +311,7 @@ fetch('data.json').then(r => r.json()).then(function (D) {
     const b = document.createElement('button');
     b.className = 'chip'; b.type = 'button'; b.setAttribute('aria-pressed', 'true');
     b.style.setProperty('--c', 'var(' + CATS[k].v + ')');
-    b.innerHTML = '<i></i>' + CATS[k].label;
+    b.dataset.cat = k; b.innerHTML = '<i></i><span></span>';
     b.onclick = () => { active.has(k) ? active.delete(k) : active.add(k); b.setAttribute('aria-pressed', active.has(k)); renderList(); renderPins(); };
     chips.appendChild(b);
   }
@@ -262,37 +327,37 @@ fetch('data.json').then(r => r.json()).then(function (D) {
       b.innerHTML = '<i></i><span></span>'; b.querySelector('span').textContent = label;
       b.setAttribute('aria-current', isCur ? 'true' : 'false'); b.onclick = onClick; return b;
     };
-    const ps = pois.filter(p => active.has(p.cat) && (!q || norm(p.name + ' ' + p.kind).includes(q)));
+    const ps = pois.filter(p => active.has(p.cat) && (!q || norm(poiName(p) + ' ' + poiKind(p)).includes(q)));
     if (ps.length) {
-      const h = document.createElement('div'); h.className = 'group'; h.textContent = 'Lieux et services (' + ps.length + ')'; list.appendChild(h);
-      ps.sort((a, b) => Object.keys(CATS).indexOf(a.cat) - Object.keys(CATS).indexOf(b.cat) || a.name.localeCompare(b.name, 'fr'))
-        .forEach(p => list.appendChild(mk(p.name, CATS[p.cat].v, selected === p, () => select(Object.assign(p, { type: 'poi' })))));
+      const h = document.createElement('div'); h.className = 'group'; h.textContent = t('places') + ' (' + ps.length + ')'; list.appendChild(h);
+      ps.sort((a, b) => Object.keys(CATS).indexOf(a.cat) - Object.keys(CATS).indexOf(b.cat) || poiName(a).localeCompare(poiName(b), lang))
+        .forEach(p => list.appendChild(mk(poiName(p), CATS[p.cat].v, selected === p, () => select(Object.assign(p, { type: 'poi' })))));
     }
     const hs = [...houses.keys()].filter(n => !q || norm(n).includes(q)).sort((a, b) => a.localeCompare(b, 'fr'));
     if (hs.length) {
-      const h = document.createElement('div'); h.className = 'group'; h.textContent = 'Maisons et bâtiments (' + hs.length + ')'; list.appendChild(h);
+      const h = document.createElement('div'); h.className = 'group'; h.textContent = t('houses') + ' (' + hs.length + ')'; list.appendChild(h);
       hs.forEach(n => list.appendChild(mk(n, SERVICE_RX.test(n) ? '--accent' : null, selected && selected.type === 'house' && selected.name === n, () => select({ type: 'house', name: n }))));
     }
-    if (!ps.length && !hs.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'Aucun résultat. Essaie « laverie », « Brésil » ou « RER ».'; list.appendChild(e); }
+    if (!ps.length && !hs.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = t('empty'); list.appendChild(e); }
   }
   function renderCard() {
     const c = $('#card');
     if (!selected) { c.hidden = true; return; }
     c.hidden = false; c.className = 'card'; c.innerHTML = '';
-    const h = document.createElement('h2'); h.textContent = selected.name; c.appendChild(h);
+    const h = document.createElement('h2'); h.textContent = itemName(selected); c.appendChild(h);
     const m = document.createElement('div'); m.className = 'meta';
     if (selected.type === 'house') {
       const bs = houses.get(selected.name);
       const H = Math.max(...bs.map(b => b.H));
       const est = bs.some(b => !b.h);
-      m.textContent = (bs.length > 1 ? bs.length + ' bâtiments · ' : '') + 'environ ' + Math.round(H) + ' m de haut' + (est ? ' (estimé)' : '');
+      m.textContent = (bs.length > 1 ? bs.length + ' ' + t('buildings') + ' · ' : '') + t('height')(Math.round(H)) + (est ? ' (' + t('estimated') + ')' : '');
       c.appendChild(m);
       const a = document.createElement('a'); const id = bs[0].id;
       a.href = 'https://www.openstreetmap.org/' + (id[0] === 'w' ? 'way/' : 'relation/') + id.slice(1).split('_')[0];
-      a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Voir la fiche OpenStreetMap';
+      a.target = '_blank'; a.rel = 'noopener'; a.textContent = t('osmLink');
       c.appendChild(a);
     } else {
-      m.textContent = CATS[selected.cat].label + ' · ' + selected.kind; c.appendChild(m);
+      m.textContent = CATS[selected.cat][lang] + ' · ' + poiKind(selected); c.appendChild(m);
     }
   }
 
@@ -302,7 +367,7 @@ fetch('data.json').then(r => r.json()).then(function (D) {
     const el = document.createElement('div');
     el.className = 'pin' + (p.cat === 'transit' ? ' transit' : '');
     el.style.setProperty('--c', 'var(' + CATS[p.cat].v + ')');
-    el.innerHTML = '<b></b><em></em>'; el.querySelector('em').textContent = p.name;
+    el.innerHTML = '<b></b><em></em>';
     el.onclick = () => select(Object.assign(p, { type: 'poi' }));
     labels.appendChild(el); return el;
   });
@@ -322,7 +387,7 @@ fetch('data.json').then(r => r.json()).then(function (D) {
     });
     if (selected) {
       v.set(selected.x, selected.y + (selected.type === 'poi' ? 10 : 0), selected.z).project(camera);
-      tagEl.hidden = v.z > 1; tagEl.textContent = selected.name;
+      tagEl.hidden = v.z > 1; tagEl.textContent = itemName(selected);
       tagEl.style.transform = 'translate(' + ((v.x + 1) / 2 * w) + 'px,' + ((1 - v.y) / 2 * h) + 'px) translate(-50%,-100%)';
     } else tagEl.hidden = true;
   }
@@ -342,7 +407,7 @@ fetch('data.json').then(r => r.json()).then(function (D) {
     const m = pick(e);
     if (m !== hovered) { hovered = m; refreshHighlight(); }
     renderer.domElement.style.cursor = m ? 'pointer' : '';
-    if (m) { tip.hidden = false; tip.textContent = m.userData.b.n || 'Bâtiment sans nom dans OSM'; tip.style.left = (e.clientX + 14) + 'px'; tip.style.top = (e.clientY + 14) + 'px'; }
+    if (m) { tip.hidden = false; tip.textContent = m.userData.b.n || t('unnamed'); tip.style.left = (e.clientX + 14) + 'px'; tip.style.top = (e.clientY + 14) + 'px'; }
     else tip.hidden = true;
   });
   renderer.domElement.addEventListener('pointerleave', () => { hovered = null; tip.hidden = true; refreshHighlight(); });
@@ -372,7 +437,16 @@ fetch('data.json').then(r => r.json()).then(function (D) {
     placeLabels();
     requestAnimationFrame(tick);
   }
-  resize(); applyTheme(); renderList(); renderPins(); tick();
+  onLang = () => {
+    for (const el of chips.children) el.querySelector('span').textContent = CATS[el.dataset.cat][lang];
+    pois.forEach((p, i) => { pinEls[i].querySelector('em').textContent = poiName(p); });
+    tip.hidden = true;
+    renderList(); renderCard();
+  };
+  resize(); applyTheme(); onLang(); renderPins(); tick();
 }).catch(function (e) {
-  var l = document.querySelector('.loading'); if (l) l.textContent = 'Impossible de charger la maquette (' + e.message + ')';
+  const l = $('.loading'); if (!l) return;
+  l.removeAttribute('data-i18n');
+  onLang = () => { l.textContent = t('loadError') + ' (' + e.message + ')'; };
+  onLang();
 });
