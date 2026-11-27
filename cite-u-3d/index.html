@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cité U in 3D</title>
+<script>
+  // Embedded in the main page (?embed): match its light theme.
+  if (new URLSearchParams(location.search).has('embed')) {
+    document.documentElement.classList.add('embed');
+    document.documentElement.dataset.theme = 'light';
+  }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="cite-u-3d.css">
+</head>
+<body>
+<div id="scene"><div class="loading" data-i18n="loading">Building the model…</div></div>
+<div id="labels"></div>
+<div class="tip" id="tip" hidden></div>
+
+<aside class="panel" id="panel" aria-label="Campus guide" data-i18n-label="panel">
+  <div class="head">
+    <button class="hide-panel" id="hide-panel" type="button" aria-controls="panel" aria-label="Hide panel" data-i18n-label="hide">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <div class="eyebrow" data-i18n="eyebrow">Paris 14th · Boulevard Jourdan</div>
+    <h1>Cité U <span data-i18n="in3d">in 3D</span></h1>
+    <p class="sub" data-i18n="sub"></p>
+  </div>
+  <div class="controls">
+    <input class="search" id="q" type="search" autocomplete="off" data-i18n-placeholder="search" data-i18n-label="searchLabel">
+    <div class="chips" id="chips"></div>
+  </div>
+  <div id="card" hidden></div>
+  <div class="list" id="list"></div>
+</aside>
+<button class="btn show-panel" id="show-panel" type="button" aria-controls="panel" hidden>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+  <span data-i18n="show">Show guide</span>
+</button>
+
+<div class="tools">
+  <a class="btn back" href="../index.html" style="text-decoration:none">← Fast Track</a>
+  <button class="btn" id="reset" type="button" data-i18n="overview">Overview</button>
+  <div class="lang" role="group" aria-label="Language" data-i18n-label="language">
+    <button type="button" data-lang="en" lang="en" title="English">EN</button>
+    <button type="button" data-lang="fr" lang="fr" title="Français">FR</button>
+  </div>
+</div>
+<div class="credit"><span data-i18n="data">Data ©</span> <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" data-i18n="osm">OpenStreetMap contributors</a> · <span data-i18n="heights">some heights are estimated</span></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/utils/BufferGeometryUtils.js"></script>
+<script src="cite-u-3d.js"></script>
+</body>
+</html>

@@ -142,6 +142,16 @@ async function doLogin() {
   navigate('step1');
 }
 
+// Dev shortcut: only available when served from localhost (never on the deployed site).
+const IS_DEV_HOST = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(location.hostname);
+
+function devLogin() {
+  if (!IS_DEV_HOST) return;
+  state.user = { name: 'Dev user', email: 'dev@localhost', house: HOUSES[0] };
+  state.selectedHouse = state.user.house;
+  navigate('step1');
+}
+
 async function doRegister() {
   if (isSubmitting) return;
   const name  = document.getElementById('r-name')?.value?.trim();
@@ -191,7 +201,7 @@ function navbar(mode) {
   let actions = '';
   if (mode === 'login')    actions = `<button class="btn-nav" onclick="navigate('register')">Create an account</button>`;
   if (mode === 'register') actions = `<span style="color:var(--muted);font-size:14px">Already have an account?</span> <button class="link" onclick="navigate('login')">Log in</button>`;
-  if (mode === 'app')      actions = `<span class="navbar-user">${esc(state.user?.name)}</span><button class="link" onclick="logout()">Log out</button>`;
+  if (mode === 'app')      actions = `<a class="link" href="cite-u-3d/index.html">Campus map</a><span class="navbar-user">${esc(state.user?.name)}</span><button class="link" onclick="logout()">Log out</button>`;
   const brand = mode === 'app'
     ? `<span class="navbar-brand clickable" onclick="navigate('step1')">${LOGO} CIUP Fast Track</span>`
     : `<span class="navbar-brand">${LOGO} CIUP Fast Track</span>`;
@@ -233,6 +243,7 @@ ${navbar('login')}
         <input class="form-input" type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password">
       </div>
       <button class="btn btn-primary" id="login-btn" onclick="doLogin()">Log in</button>
+      ${IS_DEV_HOST ? `<button class="btn btn-outline" style="width:100%;margin-top:10px;border-style:dashed" type="button" onclick="devLogin()">Dev: continue without logging in</button>` : ''}
 
       <div class="info-notice info-notice-white" style="margin-top:20px;margin-bottom:0">
         <span>${IC.info}</span>
@@ -335,6 +346,20 @@ ${navbar('app')}
       then contact CIUP security at <strong>+33 1 44 16 65 00</strong> (24/7).
     </span>
   </div>
+
+  <section class="map-section">
+    <div class="map-head">
+      <div>
+        <h2 class="map-title">Looking for a place, not a person?</h2>
+        <p class="map-sub">Explore the 3D campus map: houses, restaurants, sports, services and transport.</p>
+      </div>
+      <a class="map-fullscreen" href="cite-u-3d/index.html">Open full screen ${IC.arrowRight}</a>
+    </div>
+    <div class="map-frame" id="map-frame" onpointerleave="if(event.pointerType==='mouse')lockMap()">
+      <iframe src="cite-u-3d/index.html?embed" title="3D campus map" loading="lazy"></iframe>
+      <button class="map-unlock" type="button" onclick="unlockMap()"><span>Click to explore the map</span></button>
+    </div>
+  </section>
 </div>`;
 }
 
@@ -568,6 +593,14 @@ function copyEmail(email, idx) {
     finish(true);
   }
 }
+
+// ── Embedded campus map ────────────────────────────────────────
+// A cover sits over the map until clicked, so scrolling the page doesn't zoom or rotate it by accident.
+function unlockMap() { document.getElementById('map-frame')?.classList.add('active'); }
+function lockMap()   { document.getElementById('map-frame')?.classList.remove('active'); }
+
+// Touch screens have no "mouse leaves": lock again on a tap anywhere outside the map.
+document.addEventListener('pointerdown', e => { if (!e.target.closest('#map-frame')) lockMap(); });
 
 // ── Search autocomplete ────────────────────────────────────────
 function updateDropdown() {
