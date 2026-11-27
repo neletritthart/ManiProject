@@ -306,7 +306,7 @@ ${navbar('app')}
 <div class="page-wrap">
   <div class="step-label">STEP 1 OF 3</div>
   <h1 class="page-title">What do you need help with?</h1>
-  <p class="page-subtitle">Type a few words, tap a keyword, or pick a common problem below.</p>
+  <p class="page-subtitle">Type a few words or pick a common problem below.</p>
 
   <div class="search-label">Search for a problem or a person</div>
   <div class="search-row">
@@ -320,14 +320,6 @@ ${navbar('app')}
       <div class="search-dropdown" id="search-dropdown"></div>
     </div>
     <button class="search-btn" onclick="hideDropdown();doSearch()">Search</button>
-  </div>
-
-  <div class="keywords-section">
-    <div class="keywords-label">Popular keywords</div>
-    <div class="keywords-row">
-      ${POPULAR_KEYWORDS.map(k => `
-        <button class="keyword-chip" onclick="useKeyword('${esc(k)}')">${esc(k)}</button>`).join('')}
-    </div>
   </div>
 
   <div class="section-label">Common problems</div>
@@ -526,14 +518,6 @@ function selectProblem(idx) {
   const p = COMMON_PROBLEMS[idx];
   state.selectedProblem = p;
   state.search = p.name;
-  navigate('step2');
-}
-
-function useKeyword(kw) {
-  const input = document.getElementById('search-q');
-  if (input) input.value = kw;
-  state.search = kw;
-  state.selectedProblem = searchByQuery(kw);
   navigate('step2');
 }
 

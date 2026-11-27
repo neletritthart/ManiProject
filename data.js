@@ -144,8 +144,6 @@ const CONTACTS = {
   },
 };
 
-const POPULAR_KEYWORDS = ['heating','hot water','wifi','rent','key','package','noise','cleaning','guests','repair'];
-
 const QUICK_ANSWERS = [
   { id:'qa-radiator',  keywords:['heat','radiator','cold','warm','heating'],
     question:'My radiator is cold. What should I check first?',
