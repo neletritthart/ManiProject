@@ -831,3 +831,32 @@ body {
   .navbar { padding: 0 16px; }
   .page-wrap { padding: 32px 16px 56px; }
 }
+
+/* ── Campus map promo (step 1) ──────────────────────── */
+.map-promo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 24px 0 16px;
+  padding: 16px 18px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.map-promo:hover { border-color: var(--green); }
+.map-promo-cta {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--green);
+}
+@media (max-width: 600px) {
+  .map-promo { flex-direction: column; align-items: flex-start; }
+}
